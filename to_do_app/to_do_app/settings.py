@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-y3sq_^p+=6$a)f&h*1)x$3jp(t$$1l^&c54ho&af7z)7elfwor'
+SECRET_KEY = 'django-insecure-y3sq_^p+=6$a)f&h*1)x$3jp(t$$1l^&c54ho&af7z)7elfwor' # чувствительная информация, перенести в .env
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -75,10 +75,14 @@ WSGI_APPLICATION = 'to_do_app.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
+DATABASES = { 
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'to_do_app',
+        'USER': 'admin', # чувствительная информация перенести в .env
+        'PASSWORD': 'admin', # чувствительная информация перенести в .env
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
