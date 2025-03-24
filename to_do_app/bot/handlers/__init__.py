@@ -6,7 +6,7 @@ def setup_routers(dp: Router):
     task_router = Router()
 
     # Отложенный импорт
-    from .common import command_start, command_help, command_logout
+    from .common import command_start, command_help
     from .tasks import list_tasks, add_task, delete_task, done_task
     from . import dialog
 
