@@ -1,11 +1,14 @@
 from aiogram import Router, F
-from .common import command_start, command_help
-from .tasks import list_tasks, add_task, delete_task, done_task
-from . import  dialogs
+
 def setup_routers(dp: Router):
     # Создаем отдельные роутеры для каждой группы обработчиков
     common_router = Router()
     task_router = Router()
+
+    # Отложенный импорт
+    from .common import command_start, command_help, command_logout
+    from .tasks import list_tasks, add_task, delete_task, done_task
+    from . import dialog
 
     # Регистрируем обработчики
     common_router.message.register(command_start, F.text == "/start")
@@ -19,4 +22,4 @@ def setup_routers(dp: Router):
     # Включаем роутеры в главный диспетчер
     dp.include_router(common_router)
     dp.include_router(task_router)
-    dp.include_router(dialogs.task_dialog.router)
+    dp.include_router(dialog.task_dialog.router)
