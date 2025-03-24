@@ -10,7 +10,6 @@ def setup_routers(dp: Router):
     # Регистрируем обработчики
     common_router.message.register(command_start, F.text == "/start")
     common_router.message.register(command_help, F.text == "/help")
-    common_router.message.register(command_logout, F.text == "/logout")
 
     task_router.message.register(list_tasks, F.text == "/list")
     task_router.message.register(add_task, F.text == "/add")
