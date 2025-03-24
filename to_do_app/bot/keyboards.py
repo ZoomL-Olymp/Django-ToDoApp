@@ -1,4 +1,4 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 
 # Создаем клавиатуру
 main_keyboard = ReplyKeyboardMarkup(
@@ -21,3 +21,12 @@ main_keyboard = ReplyKeyboardMarkup(
     input_field_placeholder="Выберите действие",  # Текст в поле ввода
     selective=True, # Для каких пользователей клавиатура
 )
+
+def categories_keyboard(categories: list) -> InlineKeyboardMarkup:
+    """Создает инлайн-клавиатуру со списком категорий."""
+    keyboard = []
+    for category in categories:
+        keyboard.append(
+            [InlineKeyboardButton(text=category['name'], callback_data=f"category_{category['id']}")]
+        )
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
