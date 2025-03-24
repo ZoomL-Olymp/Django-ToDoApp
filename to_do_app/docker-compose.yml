@@ -1,0 +1,73 @@
+services:
+  web:  # Сервис Django
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db 
+      - redis
+    environment:
+        - CELERY_BROKER_URL=redis://redis:6379/0 #  Указываем адрес Celery
+        - CELERY_RESULT_BACKEND=db+postgresql://${DB_USER}:${DB_PASS}@db:5432/to_do_app
+        - DATABASE_URL=postgresql://${DB_USER}:${DB_PASS}@db:5432/to_do_app
+        - SECRET_KEY=${SECRET_KEY}
+        - DEBUG=True # Для разработки
+        - BOT_TOKEN=${BOT_TOKEN}
+    env_file:
+      - .env
+    networks:
+         - mynetwork
+
+  db: # Сервис PostgreSQL
+    image: postgres:17
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Монтируем volume для данных
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: to_do_app
+    env_file:
+      - .env
+    networks:
+      - mynetwork
+
+  redis:  # Сервис Redis
+    image: redis:7.2-alpine # Легковесный образ
+    env_file:
+      - .env
+    networks:
+      - mynetwork
+    volumes:
+      - redis_data:/data
+
+  celery_worker: # Сервис Celery worker
+    build: .
+    command: celery -A to_do_app worker -l info
+    volumes:
+       - .:/code
+    depends_on:
+       - web
+       - redis
+       - db
+    environment:
+        - CELERY_BROKER_URL=redis://redis:6379/0
+        - CELERY_RESULT_BACKEND=db+postgresql://${DB_USER}:${DB_PASS}@db:5432/to_do_app
+        - DATABASE_URL=postgresql://${DB_USER}:${DB_PASS}@db:5432/to_do_app
+        - SECRET_KEY=${SECRET_KEY}
+        - DEBUG=True #  Для разработки
+        - BOT_TOKEN=${BOT_TOKEN} # Передаем токен
+    env_file:
+      - .env
+    networks:
+         - mynetwork
+
+volumes:  # Определяем volumes
+  postgres_data:
+  redis_data:
+
+networks:
+  mynetwork:
+      driver: bridge # Сеть
