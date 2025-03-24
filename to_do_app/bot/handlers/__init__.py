@@ -9,6 +9,7 @@ def setup_routers(dp: Router):
     from .common import command_start, command_help
     from .tasks import list_tasks, add_task, delete_task, done_task
     from .tasks import router as task_router
+    from .categories import router as category_router
     from ..dialogs import task_dialog
 
     # Регистрируем обработчики
@@ -23,4 +24,5 @@ def setup_routers(dp: Router):
     # Включаем роутеры в главный диспетчер
     dp.include_router(common_router)
     dp.include_router(task_router)
+    dp.include_router(category_router)
     dp.include_router(task_dialog.router)

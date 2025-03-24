@@ -22,7 +22,16 @@ class TaskViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticated]
-    queryset = Category.objects.all()
+    
+    def get_queryset(self):
+        """
+        This view should return a list of all the categories
+        for the currently authenticated user.
+        """
+        return Category.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])

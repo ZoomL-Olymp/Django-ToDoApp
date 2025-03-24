@@ -7,12 +7,12 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = '__all__'
-        read_only_fields = ('id',)
+        read_only_fields = ('id','user') 
 
 
 class TaskSerializer(serializers.ModelSerializer):
-    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), allow_null=True, required=False)
-    user_task_id = serializers.IntegerField(read_only=True) # Add this
+    category = serializers.SlugRelatedField(slug_field='id', queryset=Category.objects.all(), allow_null=True, required=False) # Added
+    user_task_id = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Task
@@ -34,7 +34,7 @@ class TaskSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         if instance.category:
-            representation['category'] = instance.category.id  #  Или  instance.category.name, если хочешь название
+            representation['category'] = instance.category.id  # Use .id
         return representation
 
 class UserProfileSerializer(serializers.ModelSerializer):

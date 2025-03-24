@@ -22,7 +22,7 @@ def generate_task_id(user_id: int) -> str:
 class Category(models.Model):
     id = models.CharField(primary_key=True, max_length=16, unique=True, editable=False)
     name = models.CharField(max_length=255, unique=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="categories", null=True, blank=True)  # Added user field
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="categories", null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.id:
