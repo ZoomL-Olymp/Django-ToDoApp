@@ -1,6 +1,6 @@
 from aiogram import Router, F
 from aiogram.types import Message
-from keyboards.reply import main_keyboard #  WIP | placeholder
+from keyboards import main_keyboard
 from api_client import get_tasks, delete_task_request, complete_task
 from utils import UserData  # WIP | placeholder
 from aiogram.fsm.context import FSMContext

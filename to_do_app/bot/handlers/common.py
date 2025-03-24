@@ -1,6 +1,6 @@
 from aiogram import Router, F
 from aiogram.types import Message
-from keyboards.reply import main_keyboard #  WIP | placeholder
+from keyboards import main_keyboard
 from api_client import auth_user, delete_tokens #  WIP | placeholder
 from utils import UserData  #  WIP | placeholder
 
