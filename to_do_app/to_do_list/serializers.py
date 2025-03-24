@@ -12,11 +12,12 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class TaskSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), allow_null=True, required=False)
+    user_task_id = serializers.IntegerField(read_only=True) # Add this
 
     class Meta:
         model = Task
         fields = '__all__'
-        read_only_fields = ('id', 'user', 'created_at', 'celery_task_id')
+        read_only_fields = ('id', 'user', 'created_at', 'celery_task_id', 'user_task_id')
 
     def validate_due_date(self, value):
         """Проверяет, что дата выполнения не в прошлом."""

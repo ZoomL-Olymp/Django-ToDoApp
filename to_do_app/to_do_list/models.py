@@ -42,11 +42,15 @@ class Task(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, blank=True, null=True)
     completed = models.BooleanField(default=False)
     celery_task_id = models.CharField(max_length=255, blank=True, null=True, editable=False)
+    user_task_id = models.PositiveIntegerField(null=True, blank=True) # ID for user convenience
 
     def save(self, *args, **kwargs):
         if not self.id:
             self.id = generate_task_id(self.user.id)
-        super().save(*args, **kwargs)  # This is the *only* save call needed
+        if not self.user_task_id:  # Only set on creation
+            max_id = Task.objects.filter(user=self.user).aggregate(models.Max('user_task_id'))['user_task_id__max']
+            self.user_task_id = (max_id or 0) + 1 # Increment, handle None
+        super().save(*args, **kwargs)  # Call super *after* setting user_task_id
 
     def __str__(self):
         return self.title
