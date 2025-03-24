@@ -39,11 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-<<<<<<< HEAD
-    'rest_framework.authtoken',
-=======
     'rest_framework_simplejwt',
->>>>>>> dev-crud-extension
     'to_do_list',
 ]
 
