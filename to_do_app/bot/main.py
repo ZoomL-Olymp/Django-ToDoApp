@@ -3,8 +3,8 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
-from config_reader import config 
-from handlers import setup_routers 
+from bot.config_reader import config
+from bot.handlers import setup_routers
 
 async def main():
     logging.basicConfig(

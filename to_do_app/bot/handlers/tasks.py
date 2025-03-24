@@ -1,10 +1,10 @@
 from aiogram import Router, F
 from aiogram.types import Message
-from keyboards import main_keyboard
-from api_client import get_tasks, delete_task_request, complete_task
-from utils import UserData  # WIP | placeholder
+from bot.keyboards import main_keyboard
+from bot.api_client import get_tasks, delete_task_request, complete_task
+from bot.utils import UserData  # WIP | placeholder
 from aiogram.fsm.context import FSMContext
-from dialogs.task_dialog import TaskDialog, add_task_handler
+from bot.dialogs.task_dialog import TaskDialog, add_task_handler
 async def list_tasks(message: Message):
     user_id = message.from_user.id
     access_token, refresh_token = await UserData.get_tokens(user_id)

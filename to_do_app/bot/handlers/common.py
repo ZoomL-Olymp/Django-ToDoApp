@@ -1,8 +1,8 @@
 from aiogram import Router, F
 from aiogram.types import Message
-from keyboards import main_keyboard
-from api_client import auth_user, delete_tokens #  WIP | placeholder
-from utils import UserData  #  WIP | placeholder
+from bot.keyboards import main_keyboard
+from bot.api_client import auth_user, delete_tokens #  WIP | placeholder
+from bot.utils import UserData  #  WIP | placeholder
 
 async def command_start(message: Message):
     user_id = message.from_user.id

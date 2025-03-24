@@ -2,10 +2,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram import Router, F
-from states import TaskDialog
-from api_client import create_task, get_categories
-from utils import UserData
-from keyboards import categories_keyboard
+from bot.states import TaskDialog
+from bot.api_client import create_task, get_categories
+from bot.utils import UserData
+from bot.keyboards import categories_keyboard
 from datetime import datetime
 
 router = Router()

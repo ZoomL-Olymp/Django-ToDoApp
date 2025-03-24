@@ -1,5 +1,5 @@
 import aiohttp
-from config_reader import config
+from bot.config_reader import config
 from typing import Dict, Optional, List, Union
 BASE_URL = "http://localhost:8000/api"
 
