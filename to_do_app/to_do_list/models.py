@@ -3,6 +3,10 @@ import hashlib
 import secrets
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .tasks import send_notification
+from celery.result import AsyncResult
 
 def generate_custom_id(prefix="cat") -> str:
     """Генерирует уникальный идентификатор для категорий."""
@@ -38,6 +42,7 @@ class Task(models.Model):
     due_date = models.DateTimeField()
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, blank=True, null=True)
     completed = models.BooleanField(default=False)
+    celery_task_id = models.CharField(max_length=255, blank=True, null=True, editable=False)
 
     def save(self, *args, **kwargs):
         if not self.id:
@@ -46,3 +51,16 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+    
+@receiver(post_save, sender=Task)
+def schedule_notification(sender, instance, created, **kwargs):
+    """Планирует отправку уведомления при создании или изменении задачи."""
+    if created or instance.due_date != instance.created_at:
+        # Отменяем предыдущую запланированную задачу (если она была)
+        if instance.celery_task_id:
+            result = AsyncResult(instance.celery_task_id)
+            result.revoke()
+        eta = instance.due_date
+        task = send_notification.apply_async(args=[instance.pk], eta=eta)
+        instance.celery_task_id = task.id
+        sender.objects.filter(pk=instance.pk).update(celery_task_id=task.id)
