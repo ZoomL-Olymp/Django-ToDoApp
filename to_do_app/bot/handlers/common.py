@@ -1,8 +1,8 @@
 from aiogram import Router, F
 from aiogram.types import Message
 from bot.keyboards import main_keyboard
-from bot.api_client import auth_user, delete_tokens #  WIP | placeholder
-from bot.utils import UserData  #  WIP | placeholder
+from bot.api_client import auth_user, delete_tokens
+from bot.utils import UserData
 
 async def command_start(message: Message):
     user_id = message.from_user.id
@@ -26,7 +26,7 @@ async def command_help(message: Message):
 /add - Добавить задачу
 /done - Отметить задачу выполненной
 /delete - Удалить задачу
-/categories - Список категорий
+/createcategory - Создать категорию
 /help - Помощь
     """
     await message.answer(help_text)
