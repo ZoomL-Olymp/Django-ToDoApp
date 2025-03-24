@@ -1,5 +1,5 @@
 from celery import shared_task
-from .models import Task
+from to_do_list.models import Task
 from django.utils import timezone
 
 @shared_task

@@ -5,8 +5,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .tasks import send_notification
 from celery.result import AsyncResult
+from to_do_app.celery import app
 
 def generate_custom_id(prefix="cat") -> str:
     """Генерирует уникальный идентификатор для категорий."""
@@ -61,6 +61,6 @@ def schedule_notification(sender, instance, created, **kwargs):
             result = AsyncResult(instance.celery_task_id)
             result.revoke()
         eta = instance.due_date
-        task = send_notification.apply_async(args=[instance.pk], eta=eta)
+        task = app.send_task('to_do_list.tasks.send_notification', args=[instance.pk], eta=eta)
         instance.celery_task_id = task.id
         sender.objects.filter(pk=instance.pk).update(celery_task_id=task.id)
