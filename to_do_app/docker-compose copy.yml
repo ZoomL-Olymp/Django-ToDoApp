@@ -1,0 +1,82 @@
+services:
+  web:  # Django service (API)
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=db+postgresql://${DB_USER}:${DB_PASS}@db:5432/${DB_NAME}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASS}@db:5432/${DB_NAME}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - BOT_TOKEN=${BOT_TOKEN}  # Used by Django for JWT signing key
+    networks:
+      - mynetwork
+
+  db:  # PostgreSQL database
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    networks:
+      - mynetwork
+
+  redis:  # Redis service
+    image: redis:7.2-alpine
+    volumes:
+      - redis_data:/data
+    networks:
+      - mynetwork
+
+  celery_worker:  # Celery worker
+    build: .
+    command: celery -A to_do_app worker -l info
+    volumes:
+      - .:/code
+    depends_on:
+      - web
+      - redis
+      - db
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=db+postgresql://${DB_USER}:${DB_PASS}@db:5432/${DB_NAME}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASS}@db:5432/${DB_NAME}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - BOT_TOKEN=${BOT_TOKEN}
+    networks:
+      - mynetwork
+
+  bot:  # Telegram bot service
+    build: .
+    command: python -m bot.main
+    volumes:
+      - .:/code
+    depends_on:
+      - web
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=db+postgresql://${DB_USER}:${DB_PASS}@db:5432/${DB_NAME}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASS}@db:5432/${DB_NAME}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - BOT_TOKEN=${BOT_TOKEN}
+    networks:
+      - mynetwork
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  mynetwork:
+    driver: bridge

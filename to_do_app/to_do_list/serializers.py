@@ -11,6 +11,8 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class TaskSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), allow_null=True, required=False)
+
     class Meta:
         model = Task
         fields = '__all__'
@@ -27,6 +29,12 @@ class TaskSerializer(serializers.ModelSerializer):
         if len(data.get('title', '')) > 255:
             raise serializers.ValidationError({"title": "Title is too long (max 255 characters)."})
         return data
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.category:
+            representation['category'] = instance.category.id  #  Или  instance.category.name, если хочешь название
+        return representation
 
 class UserProfileSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username') # Только username

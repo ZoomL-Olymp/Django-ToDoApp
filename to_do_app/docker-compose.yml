@@ -1,73 +1,82 @@
 services:
-  web:  # Сервис Django
+  web:  # Django service (API)
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: bash -c "./wait-for-it.sh db:5432 && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/code
     ports:
       - "8000:8000"
     depends_on:
-      - db 
+      - db
       - redis
     environment:
-        - CELERY_BROKER_URL=redis://redis:6379/0 #  Указываем адрес Celery
-        - CELERY_RESULT_BACKEND=db+postgresql://${DB_USER}:${DB_PASS}@db:5432/to_do_app
-        - DATABASE_URL=postgresql://${DB_USER}:${DB_PASS}@db:5432/to_do_app
-        - SECRET_KEY=${SECRET_KEY}
-        - DEBUG=True # Для разработки
-        - BOT_TOKEN=${BOT_TOKEN}
-    env_file:
-      - .env
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=db+postgresql://admin:admin@db:5432/to_do_app
+      - DATABASE_URL=postgresql://admin:admin@db:5432/to_do_app
+      - SECRET_KEY=django-insecure-y3sq_^p+=6$a)f&h*1)x$3jp(t$$1l^&c54ho&af7z)7elfwor
+      - DEBUG=True
+      - BOT_TOKEN=7818772601:AAH6WQ0HzCK4pwGXiTmbnqDwDbnMHu__D7A  # Used by Django for JWT signing key
     networks:
-         - mynetwork
+      - mynetwork
 
-  db: # Сервис PostgreSQL
-    image: postgres:17
+  db:  # PostgreSQL database
+    image: postgres:15
     volumes:
-      - postgres_data:/var/lib/postgresql/data  # Монтируем volume для данных
+      - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
       POSTGRES_DB: to_do_app
-    env_file:
-      - .env
     networks:
       - mynetwork
 
-  redis:  # Сервис Redis
-    image: redis:7.2-alpine # Легковесный образ
-    env_file:
-      - .env
-    networks:
-      - mynetwork
+  redis:  # Redis service
+    image: redis:7.2-alpine
     volumes:
       - redis_data:/data
+    networks:
+      - mynetwork
 
-  celery_worker: # Сервис Celery worker
+  celery_worker:  # Celery worker
     build: .
     command: celery -A to_do_app worker -l info
     volumes:
-       - .:/code
+      - .:/code
     depends_on:
-       - web
-       - redis
-       - db
+      - web
+      - redis
+      - db
     environment:
-        - CELERY_BROKER_URL=redis://redis:6379/0
-        - CELERY_RESULT_BACKEND=db+postgresql://${DB_USER}:${DB_PASS}@db:5432/to_do_app
-        - DATABASE_URL=postgresql://${DB_USER}:${DB_PASS}@db:5432/to_do_app
-        - SECRET_KEY=${SECRET_KEY}
-        - DEBUG=True #  Для разработки
-        - BOT_TOKEN=${BOT_TOKEN} # Передаем токен
-    env_file:
-      - .env
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=db+postgresql://admin:admin@db:5432/to_do_app
+      - DATABASE_URL=postgresql://admin:admin@db:5432/to_do_app
+      - SECRET_KEY=django-insecure-y3sq_^p+=6$a)f&h*1)x$3jp(t$$1l^&c54ho&af7z)7elfwor
+      - DEBUG=True
+      - BOT_TOKEN=7818772601:AAH6WQ0HzCK4pwGXiTmbnqDwDbnMHu__D7A
     networks:
-         - mynetwork
+      - mynetwork
 
-volumes:  # Определяем volumes
+  bot:  # Telegram bot service
+    build: .
+    command: python -m bot.main
+    volumes:
+      - .:/code
+    depends_on:
+      - web
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=db+postgresql://admin:admin@db:5432/to_do_app
+      - DATABASE_URL=postgresql://admin:admin@db:5432/to_do_app
+      - SECRET_KEY=django-insecure-y3sq_^p+=6$a)f&h*1)x$3jp(t$$1l^&c54ho&af7z)7elfwor
+      - DEBUG=True
+      - BOT_TOKEN=7818772601:AAH6WQ0HzCK4pwGXiTmbnqDwDbnMHu__D7A
+    networks:
+      - mynetwork
+
+volumes:
   postgres_data:
   redis_data:
 
 networks:
   mynetwork:
-      driver: bridge # Сеть
+    driver: bridge

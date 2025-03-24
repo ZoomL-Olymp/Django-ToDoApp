@@ -13,7 +13,6 @@ main_keyboard = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(text="/help"),
-            KeyboardButton(text="/logout"),
         ]
     ],
     resize_keyboard=True,  # Делаем клавиатуру меньше

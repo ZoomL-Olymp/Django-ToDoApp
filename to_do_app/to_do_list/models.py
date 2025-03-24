@@ -6,7 +6,6 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from celery.result import AsyncResult
-from to_do_app.celery import app
 
 def generate_custom_id(prefix="cat") -> str:
     """Генерирует уникальный идентификатор для категорий."""
@@ -23,6 +22,7 @@ def generate_task_id(user_id: int) -> str:
 class Category(models.Model):
     id = models.CharField(primary_key=True, max_length=16, unique=True, editable=False)
     name = models.CharField(max_length=255, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="categories", null=True, blank=True)  # Added user field
 
     def save(self, *args, **kwargs):
         if not self.id:
@@ -46,12 +46,11 @@ class Task(models.Model):
     def save(self, *args, **kwargs):
         if not self.id:
             self.id = generate_task_id(self.user.id)
-        super().save(*args, **kwargs)
+        super().save(*args, **kwargs)  # This is the *only* save call needed
 
     def __str__(self):
         return self.title
-    
-    
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     telegram_id = models.CharField(max_length=255, unique=True, blank=True, null=True, db_index=True)
@@ -59,25 +58,29 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"Profile for {self.user.username} (Telegram ID: {self.telegram_id})"
 
-@receiver(post_save, sender=User) # Создаем UserProfile при создании User
+@receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
 
-@receiver(post_save, sender=User) # Сохраняем UserProfile при сохранении User
+@receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
 
 @receiver(post_save, sender=Task)
 def schedule_notification(sender, instance, created, **kwargs):
     """Планирует отправку уведомления при создании или изменении задачи."""
-    if created or instance.due_date != instance.created_at:  # Сравниваем корректно
-        # Отменяем предыдущую запланированную задачу (если она была)
+    from .tasks import send_notification  # Import inside the function
+
+    if created or instance.due_date != instance.created_at:
+        # Revoke any existing task *before* scheduling a new one
         if instance.celery_task_id:
             result = AsyncResult(instance.celery_task_id)
+            if result.state not in ('PENDING', 'STARTED', 'RETRY'): # Revoke only pending
+                print(f"Task {instance.celery_task_id} is not in pending state. State is {result.state}")
             result.revoke()
 
         eta = instance.due_date
-        task = app.send_task('to_do_list.tasks.send_notification', args=[instance.pk], eta=eta)
+        task = send_notification.apply_async(args=[instance.pk], eta=eta)
         instance.celery_task_id = task.id
-        instance.save() # Сохраняем в БД
+        # instance.save()  <-- REMOVE THIS LINE!  NO DOUBLE SAVE!

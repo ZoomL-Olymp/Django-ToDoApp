@@ -8,6 +8,7 @@ def setup_routers(dp: Router):
     # Отложенный импорт
     from .common import command_start, command_help
     from .tasks import list_tasks, add_task, delete_task, done_task
+    from .tasks import router as task_router
     from ..dialogs import task_dialog
 
     # Регистрируем обработчики
